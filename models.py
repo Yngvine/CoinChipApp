@@ -64,6 +64,14 @@ class Geometries:
     def ph(self):
         return self.mch + self.ech + .718  # Pin height
     
+    @property
+    def pbh(self):
+        return self.ech + .875 # Pin base height
+    
+    @property
+    def phhh(self):
+        return self.ech - .73 # Pin head hole height
+    
     def central_piece(self):
 
         # Start with the base workplane, creating outer and inner rectangles
@@ -100,7 +108,7 @@ class Geometries:
 
         result = result.pushPoints(self.first_diagonal)
         result = result.circle(self.pbd)
-        result = result.faces().extrude(self.ech + .875)
+        result = result.faces().extrude(self.pbh)
 
         result = result.pushPoints(self.first_diagonal)
         result = result.circle(self.pd)
@@ -108,24 +116,24 @@ class Geometries:
 
         result = result.pushPoints(self.second_diagonal)
         result = result.circle(self.phhd)
-        result = result.faces().extrude(self.ech - .73)
+        result = result.faces().extrude(self.phhh)
 
 
         # Create a triangle on a new workplane
 
         triangle = cq.Workplane("YZ")
-        triangle = triangle.workplane(offset=(self.hw - self.pld))
-        triangle = triangle.center(self.hw - self.pld + self.pd, self.ph)
+        triangle = triangle.workplane(offset=(self.first_diagonal[0][0]))
+        triangle = triangle.center(self.first_diagonal[0][1] + self.pd, self.ph)
         triangle = triangle.polyline([(0, 0), (0.4, -0.359), (0, -0.718), (0, 0)])  # Define a triangle
         triangle = triangle.close()
-        triangle = triangle.sweep(result.moveTo(self.hw - self.pld, self.hw - self.pld).circle(2))	
+        triangle = triangle.sweep(result.moveTo(*self.first_diagonal[0]).circle(self.pd))	
 
         triangle1 = cq.Workplane("YZ")
-        triangle1 = triangle1.workplane(offset=(-self.hw + self.pld))
-        triangle1 = triangle1.center(-self.hw + self.pld - self.pd, self.ph)
+        triangle1 = triangle1.workplane(offset=(self.first_diagonal[1][0]))
+        triangle1 = triangle1.center(self.first_diagonal[1][1] - self.pd, self.ph)
         triangle1 = triangle1.polyline([(0, 0), (-0.4, -0.359), (0, -0.718), (0, 0)])  # Define a triangle
         triangle1 = triangle1.close()
-        triangle1 = triangle1.sweep(result.moveTo(-self.hw + self.pld, -self.hw + self.pld).circle(2))	
+        triangle1 = triangle1.sweep(result.moveTo(*self.first_diagonal[1]).circle(self.pd))	
 
 
         # Use the sweep operation
@@ -139,18 +147,18 @@ class Geometries:
             result = result.cut(hole)
 
         triangle = cq.Workplane("YZ")
-        triangle = triangle.workplane(offset=(self.hw - self.pld))
-        triangle = triangle.center(-self.hw + self.pld - self.phhd, self.ech)
+        triangle = triangle.workplane(offset=(self.second_diagonal[0][0]))
+        triangle = triangle.center(self.second_diagonal[0][1] - self.phhd, self.ech)
         triangle = triangle.polyline([(0, 0), (-0.4, -0.365), (0, -0.73), (0, 0)])  # Define a triangle
         triangle = triangle.close()
-        triangle = triangle.sweep(result.moveTo(self.hw - self.pld, -self.hw + self.pld).circle(self.phhd))	
+        triangle = triangle.sweep(result.moveTo(*self.second_diagonal[0]).circle(self.phhd))	
 
         triangle1 = cq.Workplane("YZ")
-        triangle1 = triangle1.workplane(offset=(-self.hw + self.pld))
-        triangle1 = triangle1.center(self.hw - self.pld + self.phhd, self.ech)
+        triangle1 = triangle1.workplane(offset=(self.second_diagonal[1][0]))
+        triangle1 = triangle1.center(self.second_diagonal[1][1] + self.phhd, self.ech)
         triangle1 = triangle1.polyline([(0, 0), (0.4, -0.365), (0, -0.73), (0, 0)])  # Define a triangle
         triangle1 = triangle1.close()
-        triangle1 = triangle1.sweep(result.moveTo(-self.hw + self.pld, +self.hw - self.pld).circle(self.phhd))	
+        triangle1 = triangle1.sweep(result.moveTo(*self.second_diagonal[1]).circle(self.phhd))	
 
         result = result.cut(triangle).cut(triangle1)
         result = result.edges(cq.selectors.BoxSelector((-self.hw+.1,self.hw-.1,self.ech+.1),(0,0,0))).fillet(0.123)
