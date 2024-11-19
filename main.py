@@ -3,6 +3,7 @@ import cadquery as cq
 from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
 import vtk
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+from models import Geometries
 
 class CadQueryViewer(QMainWindow):
     def __init__(self):
@@ -27,12 +28,22 @@ class CadQueryViewer(QMainWindow):
         # Load and display a simple CadQuery model
         self.render_model()
 
+    def model(self):
+        # Create a new instance of the Geometries class
+        geom = Geometries()
+
+        mid_chip = geom.external_piece()  # Create the central piece
+        
+        combined = mid_chip  # Combine the two extrusions
+        
+        return combined
+
     def render_model(self):
         # Example CadQuery model: a simple box
-        box = cq.Workplane("front").box(2, 2, 2)
+        model = self.model()
 
         # Convert CadQuery model to VTK-compatible PolyData
-        poly_data = self.cadquery_to_vtk(box)
+        poly_data = self.cadquery_to_vtk(model)
 
         # Create a VTK mapper and actor
         mapper = vtk.vtkPolyDataMapper()
@@ -84,4 +95,4 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     viewer = CadQueryViewer()
     viewer.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
