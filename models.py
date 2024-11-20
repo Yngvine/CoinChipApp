@@ -25,11 +25,11 @@ class Geometries:
         self.cd = dimensions["cd"]     # Coin diameter
         self.ct = dimensions["ct"]     # Coin thickness
         self.pdd = dimensions["pdd"]   # Pin diagonal distance
-        self.phd = dimensions["phd"]     # Pin hole diameter
-        self.cf = min(dimensions["cf"], dimensions["ct"]/2) # Coin chamfer
-        self.pc = min(dimensions["pc"], dimensions["pd"]/2) # Pin chamfer
-        self.pbd = dimensions["pbd"]  # Pin base diameter
-        self.pd = dimensions["pd"]   # Pin diameter
+        self.phd = dimensions["phd"]   # Pin hole diameter
+        self._cf = dimensions["cf"]     # Coin fillet
+        self._pc = dimensions["pc"]     # Pin chamfer
+        self.pbd = dimensions["pbd"]   # Pin base diameter
+        self.pd = dimensions["pd"]     # Pin diameter
         self.phhd = dimensions["phhd"] # Pin head hole diameter
 
     @property
@@ -55,6 +55,14 @@ class Geometries:
     @property
     def mch(self):
         return self.ct # Mid chip height
+    
+    @property
+    def cf(self):
+        return min(self._cf, self.mch/2-.001) # Coin fillet (.001 correction to avoid errors)
+    
+    @property
+    def pc(self):
+        return min(self._pc, self.mch/2-.001) # Pin chamfer (.001 correction to avoid errors)
 
     @property
     def ech(self):
