@@ -24,7 +24,7 @@ class CadQueryViewer(QMainWindow):
     def __init__(self):
         super().__init__()
         self.geometries = Geometries()
-        self.custom_dimensions = def_dimensions
+        self.s_scale = 100.0 # Scale factor for sliders
         self.setWindowTitle("CadQuery 3D Viewer")
         self.setGeometry(100, 100, 800, 800)
 
@@ -87,40 +87,17 @@ class CadQueryViewer(QMainWindow):
         picker_widget = QWidget()
         picker_layout = QVBoxLayout(picker_widget)
         picker_layout.setAlignment(Qt.AlignTop)  # Align the layout to the top
+
+        self.slider_values = {}
+        self.sliders = {}
+        self.min_slider_labels = {}
+        self.max_slider_labels = {}
     
         # Slider for adjusting coin diameter
         slider_label_cd = QLabel("Adjust Coin Diameter:")
         picker_layout.addWidget(slider_label_cd)
     
-        slider_layout_cd = QHBoxLayout()
-        
-        # Minimum value label for coin diameter
-        min_cd = self.geometries.min_cd
-        max_cd = self.geometries.max_cd
-        cd = self.geometries.cd
-
-        min_label_cd = QLabel(str(min_cd))
-        slider_layout_cd.addWidget(min_label_cd)
-    
-        slider_cd = QSlider(Qt.Horizontal)
-        slider_cd.setMinimum(min_cd * 10)  # Scale by 10 to allow one decimal place
-        slider_cd.setMaximum(max_cd * 10)
-        slider_cd.setValue(cd * 10)
-        slider_cd.valueChanged.connect(self.on_slider_value_changed_cd)
-        slider_layout_cd.addWidget(slider_cd)
-    
-        # Maximum value label for coin diameter
-        max_label_cd = QLabel(str(max_cd))
-        slider_layout_cd.addWidget(max_label_cd)
-    
-        slider_value_cd = QDoubleSpinBox()
-        slider_value_cd.setDecimals(1)
-        slider_value_cd.setSingleStep(0.1)
-        slider_value_cd.setRange(min_cd, max_cd)
-        slider_value_cd.setValue(slider_cd.value() / 10.0)
-        slider_value_cd.valueChanged.connect(lambda value: slider_cd.setValue(int(value * 10)))
-        slider_cd.valueChanged.connect(lambda value: slider_value_cd.setValue(value / 10.0))
-        slider_layout_cd.addWidget(slider_value_cd)
+        slider_layout_cd = self.create_slider("cd")
     
         picker_layout.addLayout(slider_layout_cd)
     
@@ -128,71 +105,15 @@ class CadQueryViewer(QMainWindow):
         slider_label_ct = QLabel("Adjust Coin Thickness:")
         picker_layout.addWidget(slider_label_ct)
     
-        slider_layout_ct = QHBoxLayout()
-        
-        # Minimum value label for coin thickness
-        min_ct = self.geometries.min_ct
-        max_ct = self.geometries.max_ct
-        ct = self.geometries.ct
+        slider_layout_ct = self.create_slider("ct")
 
-        min_label_ct = QLabel(str(min_ct))
-        slider_layout_ct.addWidget(min_label_ct)
-    
-        slider_ct = QSlider(Qt.Horizontal)
-        slider_ct.setMinimum(min_ct * 10)
-        slider_ct.setMaximum(max_ct * 10)
-        slider_ct.setValue(ct * 10)
-        slider_ct.valueChanged.connect(self.on_slider_value_changed_ct)
-        slider_layout_ct.addWidget(slider_ct)
-    
-        # Maximum value label for coin thickness
-        max_label_ct = QLabel(str(max_ct))
-        slider_layout_ct.addWidget(max_label_ct)
-    
-        slider_value_ct = QDoubleSpinBox()
-        slider_value_ct.setDecimals(1)
-        slider_value_ct.setSingleStep(0.1)
-        slider_value_ct.setRange(min_ct, max_ct)
-        slider_value_ct.setValue(slider_ct.value() / 10.0)
-        slider_value_ct.valueChanged.connect(lambda value: slider_ct.setValue(int(value * 10)))
-        slider_ct.valueChanged.connect(lambda value: slider_value_ct.setValue(value / 10.0))
-        slider_layout_ct.addWidget(slider_value_ct)
-    
         picker_layout.addLayout(slider_layout_ct)
     
         # Slider for adjusting chip width
         slider_label_w = QLabel("Adjust Chip Width:")
         picker_layout.addWidget(slider_label_w)
     
-        slider_layout_w = QHBoxLayout()
-        
-        # Minimum value label for chip width
-        min_w = 1.0
-        max_w = 70.0
-        w = self.geometries.w
-
-        min_label_w = QLabel(str(min_w))
-        slider_layout_w.addWidget(min_label_w)
-    
-        slider_w = QSlider(Qt.Horizontal)
-        slider_w.setMinimum(min_w * 10)
-        slider_w.setMaximum(max_w * 10)
-        slider_w.setValue(w * 10)
-        slider_w.valueChanged.connect(self.on_slider_value_changed_w)
-        slider_layout_w.addWidget(slider_w)
-    
-        # Maximum value label for chip width
-        max_label_w = QLabel(str(max_w))
-        slider_layout_w.addWidget(max_label_w)
-    
-        slider_value_w = QDoubleSpinBox()
-        slider_value_w.setDecimals(1)
-        slider_value_w.setSingleStep(0.1)
-        slider_value_w.setRange(min_w, max_w)
-        slider_value_w.setValue(slider_w.value() / 10.0)
-        slider_value_w.valueChanged.connect(lambda value: slider_w.setValue(int(value * 10)))
-        slider_w.valueChanged.connect(lambda value: slider_value_w.setValue(value / 10.0))
-        slider_layout_w.addWidget(slider_value_w)
+        slider_layout_w = self.create_slider("w")
     
         picker_layout.addLayout(slider_layout_w)
     
@@ -200,35 +121,7 @@ class CadQueryViewer(QMainWindow):
         slider_label_h = QLabel("Adjust Chip Height:")
         picker_layout.addWidget(slider_label_h)
     
-        slider_layout_h = QHBoxLayout()
-        
-        # Minimum value label for chip height
-        min_h = 1.0
-        max_h = 8.0
-        h = self.geometries.h
-
-        min_label_h = QLabel(str(min_h))
-        slider_layout_h.addWidget(min_label_h)
-    
-        slider_h = QSlider(Qt.Horizontal)
-        slider_h.setMinimum(min_h * 10)
-        slider_h.setMaximum(max_h * 10)
-        slider_h.setValue(h * 10)
-        slider_h.valueChanged.connect(self.on_slider_value_changed_h)
-        slider_layout_h.addWidget(slider_h)
-    
-        # Maximum value label for chip height
-        max_label_h = QLabel(str(max_h))
-        slider_layout_h.addWidget(max_label_h)
-    
-        slider_value_h = QDoubleSpinBox()
-        slider_value_h.setDecimals(1)
-        slider_value_h.setSingleStep(0.1)
-        slider_value_h.setRange(min_h, max_h)
-        slider_value_h.setValue(slider_h.value() / 10.0)
-        slider_value_h.valueChanged.connect(lambda value: slider_h.setValue(int(value * 10)))
-        slider_h.valueChanged.connect(lambda value: slider_value_h.setValue(value / 10.0))
-        slider_layout_h.addWidget(slider_value_h)
+        slider_layout_h = self.create_slider("h")
     
         picker_layout.addLayout(slider_layout_h)
     
@@ -247,6 +140,44 @@ class CadQueryViewer(QMainWindow):
         picker_layout.addWidget(apply_button)
     
         return picker_widget
+
+    def create_slider(self, label):
+        """
+        Create a slider with a label and return the slider and value label.
+        """
+        slider_layout = QHBoxLayout()
+        
+        # Minimum value label for coin diameter
+        min_val = getattr(self.geometries, "min_"+label)
+        max_val = getattr(self.geometries, "max_"+label)
+        val = getattr(self.geometries, label)
+
+        self.min_slider_labels[label] = QLabel(str(min_val))
+        slider_layout.addWidget(self.min_slider_labels[label])
+    
+        self.sliders[label] = QSlider(Qt.Horizontal)
+        self.sliders[label].setMinimum(min_val * self.s_scale)  # Scale by 10 to allow one decimal place
+        self.sliders[label].setMaximum(max_val * self.s_scale)
+        self.sliders[label].setValue(val * self.s_scale)
+        self.sliders[label].valueChanged.connect(getattr(self, f"on_slider_value_changed_{label}"))
+        self.sliders[label].sliderReleased.connect(self.update_slider_ranges)
+        slider_layout.addWidget(self.sliders[label])
+    
+        # Maximum value label for coin diameter
+        self.max_slider_labels[label] = QLabel(str(max_val))
+        slider_layout.addWidget(self.max_slider_labels[label])
+    
+        self.slider_values[label] = QDoubleSpinBox()
+        self.slider_values[label].setDecimals(2)
+        self.slider_values[label].setSingleStep(0.1)
+        self.slider_values[label].setRange(min_val, max_val)
+        self.slider_values[label].setValue(self.sliders[label].value() / self.s_scale)
+        self.slider_values[label].valueChanged.connect(lambda value: self.sliders[label].setValue(int(value * self.s_scale)))
+        self.sliders[label].valueChanged.connect(lambda value: self.slider_values[label].setValue(value / self.s_scale))
+        self.slider_values[label].editingFinished.connect(self.update_slider_ranges)
+        slider_layout.addWidget(self.slider_values[label])
+
+        return slider_layout
     
     
     def render_models(self):
@@ -254,10 +185,10 @@ class CadQueryViewer(QMainWindow):
         Render the central and external pieces in their respective viewports.
         """
         # Iitialize all the sliders to the default values
-        self.slider_value_cd = self.geometries.cd
-        self.slider_value_ct = self.geometries.ct
-        self.slider_value_w = self.geometries.w
-        self.slider_value_h = self.geometries.h
+        self.slider_values['cd'].setValue(self.geometries.cd)
+        self.slider_values['ct'].setValue(self.geometries.ct)
+        self.slider_values['w'].setValue(self.geometries.w)
+        self.slider_values['h'].setValue(self.geometries.h)
 
         # Central piece in the first viewport
         central_piece = self.geometries.central_piece()
@@ -322,26 +253,69 @@ class CadQueryViewer(QMainWindow):
 
     # Picker section event handlers
     def on_slider_value_changed_cd(self, value):
-        self.slider_value_cd = (value / 10.0)
+        self.slider_values['cd'].setValue(value / self.s_scale)
+        self.geometries.cd = (value / self.s_scale)
     
     def on_slider_value_changed_ct(self, value):
-        self.slider_value_ct = (value / 10.0)
+        self.slider_values['ct'].setValue(value / self.s_scale)
+        self.geometries.ct = (value / self.s_scale)
     
     def on_slider_value_changed_w(self, value):
-        self.slider_value_w = (value / 10.0)
+        self.slider_values['w'].setValue(value / self.s_scale)
+        self.geometries.w = (value / self.s_scale)
     
     def on_slider_value_changed_h(self, value):
-        self.slider_value_h = (value / 10.0)
+        print(value)
+        self.slider_values['h'].setValue(value / self.s_scale)
+        self.geometries.h = (value / self.s_scale)
 
     def on_dropdown_changed(self, index):
         print(f"Dropdown selection changed: {index}")
 
+    def update_slider_ranges(self):
+        # Update the ranges of the sliders based on the current values
+        min_cd = self.geometries.min_cd
+        max_cd = self.geometries.max_cd
+        cd = self.slider_values['cd']
+
+        min_ct = self.geometries.min_ct
+        max_ct = self.geometries.max_ct
+        ct = self.slider_values['ct']
+
+        min_w = self.geometries.min_w
+        max_w = self.geometries.max_w
+        w = self.slider_values['w']
+
+        min_h = self.geometries.min_h
+        max_h = self.geometries.max_h
+        h = self.slider_values['h']
+
+        self.sliders['cd'].setRange(min_cd * self.s_scale, max_cd * self.s_scale)
+        self.sliders['ct'].setRange(min_ct * self.s_scale, max_ct * self.s_scale)
+        self.sliders['w'].setRange(min_w * self.s_scale, max_w * self.s_scale)
+        self.sliders['h'].setRange(min_h * self.s_scale, max_h * self.s_scale)
+
+        self.slider_values['cd'].setRange(min_cd, max_cd)
+        self.slider_values['ct'].setRange(min_ct, max_ct)
+        self.slider_values['w'].setRange(min_w, max_w)
+        self.slider_values['h'].setRange(min_h, max_h)
+
+        self.min_slider_labels['cd'].setText(str(min_cd))
+        self.max_slider_labels['cd'].setText(str(max_cd))
+        self.min_slider_labels['ct'].setText(str(min_ct))
+        self.max_slider_labels['ct'].setText(str(max_ct))
+        self.min_slider_labels['w'].setText(str(min_w))
+        self.max_slider_labels['w'].setText(str(max_w))
+        self.min_slider_labels['h'].setText(str(min_h))
+        self.max_slider_labels['h'].setText(str(max_h))
+
+
     def on_apply_changes(self):
 
-        self.geometries.cd = self.slider_value_cd
-        self.geometries.ct = self.slider_value_ct
-        self.geometries.w = self.slider_value_w
-        self.geometries.h = self.slider_value_h
+        self.geometries.cd = self.slider_values['cd'].value()
+        self.geometries.ct = self.slider_values['ct'].value()
+        self.geometries.w = self.slider_values['w'].value()
+        self.geometries.h = self.slider_values['h'].value()
  
         # Clear the existing actors from the renderer
         self.viewport1["vtk_renderer"].RemoveAllViewProps()

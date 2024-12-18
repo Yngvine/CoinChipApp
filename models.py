@@ -1,5 +1,6 @@
 import cadquery as cq
 import numpy as np
+import math
 
 def_dimensions = {
         "chip width": 50,               # Width
@@ -108,6 +109,11 @@ class Geometries:
     def _ech(self):
         """External chip height"""
         return (self.h - self.ct) / 2
+    
+    @property
+    def _min_ech(self):
+        """Minimum external chip height"""
+        return .73 + self._phhhwt
 
     @property
     def _ph(self):
@@ -123,16 +129,21 @@ class Geometries:
     def _phhh(self):
         """Pin head hole height"""
         return self._ech - .73
+    
+    @property
+    def _phhhwt(self):
+        """Pin head hole height wall thickness"""
+        return .2 # Accounr for the printer minimum height resolution and number of walls
         
     @property
     def max_cd(self):
         """Maximum diameter of the coin"""
-        return (self.w - 2*self._ccf) - .1
+        return math.floor((self.w - 2*self._ccf) * 100) / 100
     
     @property
     def max_ct(self):
         """Maximum thickness of the coin"""
-        return min((self.h - 2*self._phhh) - .1, 3.5) # Didn't find any coin thicker than 3.5mm thus this is the maximum thickness
+        return min(math.floor((self.h - 2*self._min_ech) * 100) / 100, 3.5) # Didn't find any coin thicker than 3.5mm thus this is the maximum thickness
     
     @property
     def min_cd(self):
@@ -143,6 +154,26 @@ class Geometries:
     def min_ct(self):
         """Minimum thickness of the coin"""
         return 1.0 # The 3D model will breack if the thickness is less than 1.0 (I didn't find any coins with thickness less than 1.0 regardless)
+
+    @property
+    def max_w(self):
+        """Maximum width of the chip"""
+        return 70 # Just a value that I think is reasonable as placeholder
+    
+    @property
+    def min_w(self):
+        """Minimum width of the chip"""
+        return max(math.ceil((self.cd + 2*self._ccf) * 100) / 100, 30) # Just a value that I think is reasonable as placeholder
+    
+    @property
+    def max_h(self):
+        """Maximum height of the chip"""
+        return 10 # Just a value that I think is reasonable as placeholder
+    
+    @property
+    def min_h(self):
+        """Minimum height of the chip"""
+        return max(math.ceil((self.ct + 2*self._min_ech) * 100) / 100, 2) # Just a value that I think is reasonable as placeholder
 
     def central_piece(self):
 
