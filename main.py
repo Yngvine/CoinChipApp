@@ -1,4 +1,6 @@
 import sys
+import os
+import zipfile
 import cadquery as cq
 from PySide6.QtWidgets import (
     QApplication,
@@ -12,9 +14,9 @@ from PySide6.QtWidgets import (
     QComboBox,
     QPushButton,
     QDoubleSpinBox,
+    QFileDialog,
 )
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QIntValidator  # Add this import
 import vtk
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from models import Geometries, def_dimensions
@@ -27,6 +29,7 @@ class CadQueryViewer(QMainWindow):
         self.s_scale = 100.0 # Scale factor for sliders
         self.setWindowTitle("CadQuery 3D Viewer")
         self.setGeometry(100, 100, 800, 800)
+        self.save_directory = os.getcwd()  # Default save directory
 
         # Main layout
         self.central_widget = QWidget(self)
@@ -64,20 +67,24 @@ class CadQueryViewer(QMainWindow):
         """
         viewport_widget = QWidget()
         viewport_layout = QVBoxLayout(viewport_widget)
-
+    
         # Add a label to identify the viewport
         label = QLabel(label_text)
         viewport_layout.addWidget(label)
-
+    
         # Add the VTK render window interactor
         vtk_widget = QVTKRenderWindowInteractor(viewport_widget)
         viewport_layout.addWidget(vtk_widget)
-
+    
         # Create the renderer and attach it to the VTK widget
         vtk_renderer = vtk.vtkRenderer()
         vtk_widget.GetRenderWindow().AddRenderer(vtk_renderer)
         vtk_interactor = vtk_widget.GetRenderWindow().GetInteractor()
-
+    
+        # Set the interactor style to TrackballCamera
+        interactor_style = vtk.vtkInteractorStyleTrackballCamera()
+        vtk_interactor.SetInteractorStyle(interactor_style)
+    
         return {"widget": viewport_widget, "vtk_widget": vtk_widget, "vtk_renderer": vtk_renderer}
 
     def create_picker_section(self):
@@ -138,7 +145,34 @@ class CadQueryViewer(QMainWindow):
         apply_button = QPushButton("Apply Changes")
         apply_button.clicked.connect(self.on_apply_changes)
         picker_layout.addWidget(apply_button)
-    
+
+        # ComboBox for selecting file format
+        format_label = QLabel("Select File Format:")
+        picker_layout.addWidget(format_label)
+        self.format_combobox = QComboBox()
+        self.format_combobox.addItems(["STEP", "STL"])
+        picker_layout.addWidget(self.format_combobox)
+
+        # Button to download the external chip STEP file
+        download_external_button = QPushButton("Download External Chip")
+        download_external_button.clicked.connect(self.download_external_chip)
+        picker_layout.addWidget(download_external_button)
+
+        # Button to download the middle chip STEP file
+        download_middle_button = QPushButton("Download Middle Chip")
+        download_middle_button.clicked.connect(self.download_middle_chip)
+        picker_layout.addWidget(download_middle_button)
+
+        # Button to download both STEP files as a ZIP
+        download_both_button = QPushButton("Download Both as ZIP")
+        download_both_button.clicked.connect(self.download_both_as_zip)
+        picker_layout.addWidget(download_both_button)
+
+        # Button to select the directory to save files
+        select_directory_button = QPushButton("Select Directory")
+        select_directory_button.clicked.connect(self.select_directory)
+        picker_layout.addWidget(select_directory_button)
+        
         return picker_widget
 
     def create_slider(self, label):
@@ -181,6 +215,40 @@ class CadQueryViewer(QMainWindow):
         slider_layout.addWidget(self.slider_values[label])
     
         return slider_layout
+    
+    def download_external_chip(self):
+        file_format = self.format_combobox.currentText().lower()
+        file_path = os.path.join(self.save_directory, f"external_chip.{file_format}")
+        self.geometries.external_piece().export(file_path)
+        print(f"External chip {file_format.upper()} file saved to {file_path}")
+
+    def download_middle_chip(self):
+        file_format = self.format_combobox.currentText().lower()
+        file_path = os.path.join(self.save_directory, f"middle_chip.{file_format}")
+        self.geometries.central_piece().export(file_path)
+        print(f"Middle chip {file_format.upper()} file saved to {file_path}")
+
+    def download_both_as_zip(self):
+        file_format = self.format_combobox.currentText().lower()
+        external_file_path = os.path.join(self.save_directory, f"external_chip.{file_format}")
+        middle_file_path = os.path.join(self.save_directory, f"middle_chip.{file_format}")
+        zip_file_path = os.path.join(self.save_directory, "chips.zip")
+
+        self.geometries.external_piece().export(external_file_path)
+        self.geometries.central_piece().export(middle_file_path)
+
+        with zipfile.ZipFile(zip_file_path, 'w') as zipf:
+            zipf.write(external_file_path, os.path.basename(external_file_path))
+            zipf.write(middle_file_path, os.path.basename(middle_file_path))
+
+        print(f"Both {file_format.upper()} files saved to {zip_file_path}")
+
+    def select_directory(self):
+        directory = QFileDialog.getExistingDirectory(self, "Select Directory")
+        if directory:
+            self.save_directory = directory
+            print(f"Save directory set to {self.save_directory}")
+
     
     
     def render_models(self):
