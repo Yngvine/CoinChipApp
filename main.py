@@ -147,26 +147,28 @@ class CadQueryViewer(QMainWindow):
         """
         slider_layout = QHBoxLayout()
         
-        # Minimum value label for coin diameter
-        min_val = getattr(self.geometries, "min_"+label)
-        max_val = getattr(self.geometries, "max_"+label)
+        # Minimum value label for the slider
+        min_val = getattr(self.geometries, "min_" + label)
+        max_val = getattr(self.geometries, "max_" + label)
         val = getattr(self.geometries, label)
-
-        self.min_slider_labels[label] = QLabel(str(min_val))
-        slider_layout.addWidget(self.min_slider_labels[label])
     
+        self.min_slider_labels[label] = QLabel(str(min_val))
+        self.min_slider_labels[label].setFixedWidth(30)  # Set a fixed width for the label
+        slider_layout.addWidget(self.min_slider_labels[label])
+        
         self.sliders[label] = QSlider(Qt.Horizontal)
         self.sliders[label].setMinimum(min_val * self.s_scale)  # Scale by 10 to allow one decimal place
         self.sliders[label].setMaximum(max_val * self.s_scale)
         self.sliders[label].setValue(val * self.s_scale)
         self.sliders[label].valueChanged.connect(getattr(self, f"on_slider_value_changed_{label}"))
         self.sliders[label].sliderReleased.connect(self.update_slider_ranges)
-        slider_layout.addWidget(self.sliders[label])
-    
-        # Maximum value label for coin diameter
+        slider_layout.addWidget(self.sliders[label], 1)  # Add stretch factor to the slider
+        
+        # Maximum value label for the slider
         self.max_slider_labels[label] = QLabel(str(max_val))
+        self.max_slider_labels[label].setFixedWidth(30)  # Set a fixed width for the label
         slider_layout.addWidget(self.max_slider_labels[label])
-    
+        
         self.slider_values[label] = QDoubleSpinBox()
         self.slider_values[label].setDecimals(2)
         self.slider_values[label].setSingleStep(0.1)
@@ -175,8 +177,9 @@ class CadQueryViewer(QMainWindow):
         self.slider_values[label].valueChanged.connect(lambda value: self.sliders[label].setValue(int(value * self.s_scale)))
         self.sliders[label].valueChanged.connect(lambda value: self.slider_values[label].setValue(value / self.s_scale))
         self.slider_values[label].editingFinished.connect(self.update_slider_ranges)
+        self.slider_values[label].setFixedWidth(80)  # Set a fixed width for the spin box
         slider_layout.addWidget(self.slider_values[label])
-
+    
         return slider_layout
     
     
