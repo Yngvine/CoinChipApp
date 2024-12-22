@@ -265,7 +265,6 @@ class CadQueryViewer(QMainWindow):
         self.geometries.w = (value / self.s_scale)
     
     def on_slider_value_changed_h(self, value):
-        print(value)
         self.slider_values['h'].setValue(value / self.s_scale)
         self.geometries.h = (value / self.s_scale)
 
