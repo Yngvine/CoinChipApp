@@ -6,3 +6,6 @@ __pycache__/
 
 # ignore .venv directory
 .venv/
+
+# ignore /downs directory
+downs/
