@@ -14,7 +14,8 @@ def_dimensions = {
         "pin chamfer": 0.5,             # Pin chamfer
         "pin base diameter": 1.6,       # Pin base diameter
         "pin diameter": 1.4,            # Pin diameter
-        "pin head hole diameter": 1.45  # Pin head hole diameter
+        "pin head hole diameter": 1.45, # Pin head hole diameter
+        "screen thickness": 0.15,       # Screen thickness
     }
 
 class Geometries:
@@ -59,6 +60,9 @@ class Geometries:
 
         self._phhd = dimensions["pin head hole diameter"]    # Pin head hole diameter
         """The diameter of the hole for the pin head"""
+
+        self._st = dimensions["screen thickness"]            # Screen thickness
+        """The thickness of the plastic screen that should cover the coin from both sides"""
 
     @property
     def _cr(self):
@@ -108,7 +112,7 @@ class Geometries:
     @property
     def _ech(self):
         """External chip height"""
-        return (self.h - self.ct) / 2
+        return (self.h - self.ct) / 2 - self._st
     
     @property
     def _min_ech(self):
@@ -138,12 +142,12 @@ class Geometries:
     @property
     def max_cd(self):
         """Maximum diameter of the coin"""
-        return math.floor((self.w - 2*self._ccf) * 100) / 100
+        return math.floor((self.w - 2 * self._ccf) * 100) / 100
     
     @property
     def max_ct(self):
         """Maximum thickness of the coin"""
-        return min(math.floor((self.h - 2*self._min_ech) * 100) / 100, 3.5) # Didn't find any coin thicker than 3.5mm thus this is the maximum thickness
+        return min(math.floor((self.h - 2 * (self._min_ech + self._st)) * 100) / 100, 3.5) # Didn't find any coin thicker than 3.5mm thus this is the maximum thickness
     
     @property
     def min_cd(self):
@@ -163,7 +167,7 @@ class Geometries:
     @property
     def min_w(self):
         """Minimum width of the chip"""
-        return max(math.ceil((self.cd + 2*self._ccf) * 100) / 100, 30) # Just a value that I think is reasonable as placeholder
+        return max(math.ceil((self.cd + 2 * self._ccf) * 100) / 100, 30) # Just a value that I think is reasonable as placeholder
     
     @property
     def max_h(self):
@@ -173,7 +177,7 @@ class Geometries:
     @property
     def min_h(self):
         """Minimum height of the chip"""
-        return max(math.ceil((self.ct + 2*self._min_ech) * 100) / 100, 2) # Just a value that I think is reasonable as placeholder
+        return max(math.ceil((self.ct + 2 * (self._min_ech + self._st)) * 100) / 100, 2) # Just a value that I think is reasonable as placeholder
 
     def central_piece(self):
 
